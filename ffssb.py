@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
 
 import argparse
+import configparser
+import os
+
+ffSettingsDir = os.path.expanduser('~') + "/.mozilla/firefox/"
+
+def get_defualt_profile_path():
+    config = configparser.ConfigParser()
+    config.read(ffSettingsDir + "profiles.ini")
+
+    for profile in config.sections():
+        for key in config[profile]:
+            if key == "default" and config[profile][key] == "1":
+                return ffSettingsDir + config[profile]["Path"]
+    return ""
 
 parser = argparse.ArgumentParser(prog="ffssb")
 subparsers = parser.add_subparsers()
