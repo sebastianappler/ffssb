@@ -5,60 +5,60 @@ import configparser
 import os
 import shutil
 
-applicationsDir = os.path.expanduser('~') + '/.local/share/applications/'
-ffSettingsDir = os.path.expanduser('~') + '/.mozilla/firefox/'
-ffBaseProfile = 'Profile0'
+applications_dir = os.path.expanduser('~') + '/.local/share/applications/'
+ffsettings_dir = os.path.expanduser('~') + '/.mozilla/firefox/'
+ffbaseprofile = 'Profile0'
 
 def get_base_profile_path():
     config = configparser.ConfigParser()
     config.optionxform = lambda optionstr : optionstr
-    config.read(ffSettingsDir + 'profiles.ini')
+    config.read(ffsettings_dir + 'profiles.ini')
 
     for profile in config.sections():
-        if profile == ffBaseProfile:
-            return ffSettingsDir + config[profile]['Path']
+        if profile == ffbaseprofile:
+            return ffsettings_dir + config[profile]['Path']
     return ''
 
 def get_profile_path(profileName):
     return 'ffssb.' + profileName
 
-def add_profile_to_ini(name, profilePath):
-    configPath = ffSettingsDir + 'profiles.ini'
-    configTmpPath = ffSettingsDir + 'profiles.ini.tmp'
+def add_profile_to_ini(name, profile_path):
+    config_path = ffsettings_dir + 'profiles.ini'
+    config_path_tmp = ffsettings_dir + 'profiles.ini.tmp'
 
     config = configparser.ConfigParser()
     config.optionxform = lambda optionstr : optionstr
-    config.read(configPath)
+    config.read(config_path)
 
-    profileMaxNum = 0;
+    profile_max_num = 0;
     for profile in config.sections():
         if profile.startswith('Profile'):
-            profileNum = int(profile.replace('Profile', ''))
-            if profileNum > profileMaxNum:
-                profileMaxNum = profileNum
+            profile_num = int(profile.replace('Profile', ''))
+            if profile_num > profile_max_num:
+                profile_max_num = profile_num
 
 
-    profileMax = 'Profile' + str(profileMaxNum)
+    profile_max = 'Profile' + str(profile_max_num)
     # Profile already exists
-    if config[profileMax]['Name'] == name and config[profileMax]['Path'] == profilePath:
+    if config[profile_max]['Name'] == name and config[profile_max]['Path'] == profile_path:
         return
 
-    profileNext = 'Profile' + str(profileMaxNum + 1)
-    configNew = configparser.RawConfigParser()
-    configNew.optionxform = lambda optionstr : optionstr
-    configNew.add_section(profileNext)
-    configNew.set(profileNext, 'Name', name)
-    configNew.set(profileNext, 'Path', profilePath)
-    configNew.set(profileNext, 'IsRelative', '1')
-    configNew.read_dict(config)
+    profile_next = 'Profile' + str(profile_max_num + 1)
+    config_new = configparser.RawConfigParser()
+    config_new.optionxform = lambda optionstr : optionstr
+    config_new.add_section(profile_next)
+    config_new.set(profile_next, 'Name', name)
+    config_new.set(profile_next, 'Path', profile_path)
+    config_new.set(profile_next, 'IsRelative', '1')
+    config_new.read_dict(config)
 
-    with open(configTmpPath, 'w') as configfile:
-        configNew.write(configfile, space_around_delimiters=False)
+    with open(config_path_tmp, 'w') as configfile:
+        config_new.write(configfile, space_around_delimiters=False)
 
-    os.remove(configPath)
-    shutil.move(configTmpPath, configPath)
+    os.remove(config_path)
+    shutil.move(config_path_tmp, config_path)
 
-def add_desktop_entry(displayName, url, profileName, name, icon):
+def add_desktop_entry(display_name, url, profile_name, name, icon):
     desktop_entry_template = '''[Desktop Entry]
 Version=1.0
 Terminal=false
@@ -69,18 +69,18 @@ Icon={4}
 StartupNotify=true
 StartupWMClass={3}'''
 
-    desktop_entry_content = desktop_entry_template.format(displayName, url, profileName, name, icon);
-    file_path = r'' + applicationsDir + name + '.desktop'
+    desktop_entry_content = desktop_entry_template.format(display_name, url, profile_name, name, icon);
+    filePath = r'' + applications_dir + name + '.desktop'
 
-    with open(file_path, 'w') as fp:
+    with open(filePath, 'w') as fp:
         fp.write(desktop_entry_content)
 
 def create(args):
-    baseProfilePath = get_base_profile_path()
-    newProfilePath = ffSettingsDir + get_profile_path(args.name)
+    baseprofile_path = get_base_profile_path()
+    newprofile_path = ffsettings_dir + get_profile_path(args.name)
 
-    shutil.rmtree(newProfilePath, ignore_errors=True)
-    shutil.copytree(baseProfilePath, newProfilePath, symlinks=True, dirs_exist_ok=True)
+    shutil.rmtree(newprofile_path, ignore_errors=True)
+    shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
     add_desktop_entry(args.name, args.url, args.name, args.name, 'emacs')
     add_profile_to_ini(args.name, get_profile_path(args.name))
 
