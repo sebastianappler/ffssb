@@ -75,14 +75,56 @@ StartupWMClass={3}'''
     with open(filePath, 'w') as fp:
         fp.write(desktop_entry_content)
 
+def add_user_chrome(profile_path):
+    chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#TabsToolbar .customization-target,     /* tabs */
+#PersonalToolbar,                       /* bookmarks toolbar */
+#page-action-buttons
+{
+    visibility: collapse;
+}
+'''
+
+    chrome_dir = ffsettings_dir + profile_path + '/chrome'
+    os.mkdir(chrome_dir)
+
+    with open(chrome_dir + '/userChrome.css', 'w') as fp:
+        fp.write(chrome_css)
+
+def set_userchrome_true(profile_path):
+    userchrome_true = 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
+
+    user_js_file = ffsettings_dir + profile_path + '/user.js'
+    if os.path.exists(user_js_file):
+        filedata = ""
+        with open(user_js_file, 'r') as fp:
+            filedata = fp.read()
+        if not filedata.find(userchrome_true):
+            with open(user_js_file, 'a') as fp:
+                fp.writelines(userchrome_true)
+        return
+    else:
+        with open(user_js_file, 'w') as fp:
+            fp.write(userchrome_true)
+
 def create(args):
     baseprofile_path = get_base_profile_path()
     newprofile_path = ffsettings_dir + get_profile_path(args.name)
+    profile_path = get_profile_path(args.name)
+    display_name = args.name
+    if args.display_name != "":
+        display_name = args.display_name
 
     shutil.rmtree(newprofile_path, ignore_errors=True)
     shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
-    add_desktop_entry(args.name, args.url, args.name, args.name, 'emacs')
-    add_profile_to_ini(args.name, get_profile_path(args.name))
+    add_desktop_entry(display_name, args.url, args.name, args.name, 'emacs')
+    add_profile_to_ini(args.name, profile_path)
+
+    if not args.skip_user_chrome:
+        add_user_chrome(profile_path)
+        set_userchrome_true(profile_path)
 
 def main():
     parser = argparse.ArgumentParser(prog='ffssb')
@@ -92,6 +134,7 @@ def main():
     parser_create = subparsers.add_parser('create', help = 'create a new site specific browser application.')
     parser_create.add_argument('name', help='name of the application')
     parser_create.add_argument('url', help='url the application will use')
+    parser_create.add_argument('--display-name', help='set display name of desktop entry')
     parser_create.add_argument('--skip-user-chrome', action='store_true', help='do not add userChrome.css to profile')
     parser_create.set_defaults(func=create)
 
