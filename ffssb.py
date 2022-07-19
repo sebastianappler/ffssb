@@ -37,7 +37,6 @@ def add_profile_to_ini(name, profile_path):
             if profile_num > profile_max_num:
                 profile_max_num = profile_num
 
-
     profile_max = 'Profile' + str(profile_max_num)
     # Profile already exists
     if config[profile_max]['Name'] == name and config[profile_max]['Path'] == profile_path:
@@ -54,7 +53,6 @@ def add_profile_to_ini(name, profile_path):
 
     with open(config_path_tmp, 'w') as configfile:
         config_new.write(configfile, space_around_delimiters=False)
-
     os.remove(config_path)
     shutil.move(config_path_tmp, config_path)
 
@@ -71,7 +69,6 @@ StartupWMClass={3}'''
 
     desktop_entry_content = desktop_entry_template.format(display_name, url, profile_name, name, icon);
     filePath = r'' + applications_dir + name + '.desktop'
-
     with open(filePath, 'w') as fp:
         fp.write(desktop_entry_content)
 
@@ -86,10 +83,8 @@ def add_user_chrome(profile_path):
     visibility: collapse;
 }
 '''
-
     chrome_dir = ffsettings_dir + profile_path + '/chrome'
     os.mkdir(chrome_dir)
-
     with open(chrome_dir + '/userChrome.css', 'w') as fp:
         fp.write(chrome_css)
 
@@ -104,7 +99,6 @@ def set_userchrome_true(profile_path):
         if not filedata.find(userchrome_true):
             with open(user_js_file, 'a') as fp:
                 fp.writelines(userchrome_true)
-        return
     else:
         with open(user_js_file, 'w') as fp:
             fp.write(userchrome_true)
