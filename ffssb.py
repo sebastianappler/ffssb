@@ -3,7 +3,9 @@
 import argparse
 import configparser
 import os
+import requests
 import shutil
+from PIL import Image
 
 applications_dir = os.path.expanduser('~') + '/.local/share/applications/'
 ffsettings_dir = os.path.expanduser('~') + '/.mozilla/firefox/'
@@ -76,11 +78,41 @@ def add_user_chrome(profile_path):
     chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#TabsToolbar .customization-target,     /* tabs */
-#PersonalToolbar,                       /* bookmarks toolbar */
+#TabsToolbar .customization-target, /* tabs */
+#PersonalToolbar, /* bookmarks toolbar */
 #page-action-buttons
 {
     visibility: collapse;
+}
+#nav-bar {
+    margin-top: -10px;
+    margin-right: 75px;
+    max-height: 40px;
+}
+#nav-bar-customization-target {
+    margin-top: 5px;
+}
+#urlbar {
+    max-width: 50vh;
+}
+#urlbar-background {
+    visibility: hidden;
+}
+#urlbar-container {
+    margin-right: 70vh;
+}
+.urlbarView {
+    display: none !important;
+}
+#PanelUI-button,
+#nav-bar-overflow-button {
+    margin-top: 5px !important;
+}
+#TabsToolbar {
+    background: #444;
+}
+#titlebar {
+    margin-bottom: -30px;
 }
 '''
     chrome_dir = ffsettings_dir + profile_path + '/chrome'
@@ -108,7 +140,7 @@ def create(args):
     newprofile_path = ffsettings_dir + get_profile_path(args.name)
     profile_path = get_profile_path(args.name)
     display_name = args.name
-    if args.display_name != "":
+    if args.display_name != None:
         display_name = args.display_name
 
     shutil.rmtree(newprofile_path, ignore_errors=True)
