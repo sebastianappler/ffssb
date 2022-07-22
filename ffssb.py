@@ -4,8 +4,10 @@ import argparse
 import configparser
 import logging
 import os
+import re
 import requests
 import shutil
+from urllib.parse import urlparse
 from PIL import Image
 
 ffssbcache_dir = os.path.expanduser('~') + '/.cache/ffssb'
@@ -24,8 +26,8 @@ def get_base_profile_path():
             return ffsettings_dir + config[profile]['Path']
     return ''
 
-def get_profile_path(profileName):
-    return 'ffssb.' + profileName
+def get_ffssb_prefix():
+    return 'ffssb.'
 
 def add_profile_to_ini(name, profile_path):
     config_path = ffsettings_dir + 'profiles.ini'
@@ -73,7 +75,7 @@ StartupNotify=true
 StartupWMClass={3}'''
 
     desktop_entry_content = desktop_entry_template.format(display_name, url, profile_name, name, icon);
-    filePath = r'' + os_applications_dir + name + '.desktop'
+    filePath = r'' + os_applications_dir + get_ffssb_prefix() + name + '.desktop'
     with open(filePath, 'w') as fp:
         fp.write(desktop_entry_content)
 
@@ -83,11 +85,16 @@ def add_desktop_entry_icon(name, url):
 
     icon_path = ffssbcache_dir + '/' + name + '.ico'
     if not os.path.exists(icon_path):
-        ico_file = requests.get(url + '/favicon.ico')
+        domain = str(urlparse(url).hostname)
+        ico_url = 'https://icons.duckduckgo.com/ip2/' + domain + '.ico'
+        ico_file = requests.get(ico_url)
         open(icon_path, 'wb').write(ico_file.content)
 
     img = Image.open(icon_path)
-    img.save(os_icons_dir + '/48x48/apps/' + name + '.png',format = 'PNG', sizes=[(48,48)])
+    img_path = os_icons_dir + '/48x48/apps/' + name + '.png'
+    img.save(img_path, format = 'PNG', sizes=[(48,48)])
+
+    return img_path
 
 def add_user_chrome(profile_path):
     chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -151,29 +158,50 @@ def set_userchrome_true(profile_path):
 
 def create(args):
     baseprofile_path = get_base_profile_path()
-    newprofile_path = ffsettings_dir + get_profile_path(args.name)
-    profile_path = get_profile_path(args.name)
+    ffssb_name = get_ffssb_prefix() + args.name
+    newprofile_path = ffsettings_dir + ffssb_name
     display_name = args.name
+    icon_path = args.name
+
     if args.display_name != None:
         display_name = args.display_name
 
     if not os.path.exists(newprofile_path):
-        shutil.rmtree(newprofile_path, ignore_errors=True)
         shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
 
-    add_desktop_entry(display_name, args.url, args.name, args.name, args.name)
-    add_profile_to_ini(args.name, profile_path)
-
-    if not args.skip_user_chrome:
-        add_user_chrome(profile_path)
-        set_userchrome_true(profile_path)
-
     try:
-        add_desktop_entry_icon(args.name, args.url)
+        icon_path = add_desktop_entry_icon(args.name, args.url)
     except:
         # We dont care if the icon fails
         # but don't break the program
         logging.info("Failed to add icon")
+
+    add_desktop_entry(display_name, args.url, args.name, args.name, icon_path)
+    add_profile_to_ini(args.name, ffssb_name)
+
+    if not args.skip_user_chrome:
+        add_user_chrome(ffssb_name)
+        set_userchrome_true(ffssb_name)
+
+def list(args):
+    applications = os.listdir(os_applications_dir)
+    ffssb_application_files = [a for a in applications if get_ffssb_prefix() in a]
+
+    data = []
+    for file in ffssb_application_files:
+        with open(os_applications_dir + file, 'r') as fp:
+            file_text = fp.read()
+            name = re.findall(r'^ffssb\.(.+)\.desktop$' ,file)[0]
+            url = re.findall(r'(https?://\S+)', file_text)[0]
+            data.append([name, url])
+
+    print ("{:<20} {:<20}".format('NAME','URL'))
+    for v in data:
+        name, url = v
+        print ("{:<20} {:<20}".format(name, url))
+
+def remove(args):
+    return ''
 
 def main():
     parser = argparse.ArgumentParser(prog='ffssb')
@@ -187,9 +215,14 @@ def main():
     parser_create.add_argument('--skip-user-chrome', action='store_true', help='do not add userChrome.css to profile')
     parser_create.set_defaults(func=create)
 
+    # list
+    parser_list = subparsers.add_parser('list', help = 'list all site specific browsers created by this tool.')
+    parser_list.set_defaults(func=list)
+
     # remove
     parser_remove = subparsers.add_parser('remove', help = 'remove site specific browser application.')
     parser_remove.add_argument('name', help='name of the application')
+    parser_remove.set_defaults(func=remove)
 
     args = parser.parse_args()
     args.func(args)
