@@ -2,12 +2,15 @@
 
 import argparse
 import configparser
+import logging
 import os
 import requests
 import shutil
 from PIL import Image
 
-applications_dir = os.path.expanduser('~') + '/.local/share/applications/'
+ffssbcache_dir = os.path.expanduser('~') + '/.cache/ffssb'
+os_applications_dir = os.path.expanduser('~') + '/.local/share/applications/'
+os_icons_dir = os.path.expanduser('~') + '/.local/share/icons/hicolor'
 ffsettings_dir = os.path.expanduser('~') + '/.mozilla/firefox/'
 ffbaseprofile = 'Profile0'
 
@@ -70,9 +73,21 @@ StartupNotify=true
 StartupWMClass={3}'''
 
     desktop_entry_content = desktop_entry_template.format(display_name, url, profile_name, name, icon);
-    filePath = r'' + applications_dir + name + '.desktop'
+    filePath = r'' + os_applications_dir + name + '.desktop'
     with open(filePath, 'w') as fp:
         fp.write(desktop_entry_content)
+
+def add_desktop_entry_icon(name, url):
+    if not os.path.exists(ffssbcache_dir):
+        os.mkdir(ffssbcache_dir)
+
+    icon_path = ffssbcache_dir + '/' + name + '.ico'
+    if not os.path.exists(icon_path):
+        ico_file = requests.get(url + '/favicon.ico')
+        open(icon_path, 'wb').write(ico_file.content)
+
+    img = Image.open(icon_path)
+    img.save(os_icons_dir + '/48x48/apps/' + name + '.png',format = 'PNG', sizes=[(48,48)])
 
 def add_user_chrome(profile_path):
     chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -92,14 +107,12 @@ def add_user_chrome(profile_path):
 #nav-bar-customization-target {
     margin-top: 5px;
 }
-#urlbar {
-    max-width: 50vh;
-}
 #urlbar-background {
     visibility: hidden;
 }
 #urlbar-container {
     margin-right: 70vh;
+    max-width: 35vh;
 }
 .urlbarView {
     display: none !important;
@@ -116,7 +129,8 @@ def add_user_chrome(profile_path):
 }
 '''
     chrome_dir = ffsettings_dir + profile_path + '/chrome'
-    os.mkdir(chrome_dir)
+    if not os.path.exists(chrome_dir):
+        os.mkdir(chrome_dir)
     with open(chrome_dir + '/userChrome.css', 'w') as fp:
         fp.write(chrome_css)
 
@@ -143,14 +157,23 @@ def create(args):
     if args.display_name != None:
         display_name = args.display_name
 
-    shutil.rmtree(newprofile_path, ignore_errors=True)
-    shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
-    add_desktop_entry(display_name, args.url, args.name, args.name, 'emacs')
+    if not os.path.exists(newprofile_path):
+        shutil.rmtree(newprofile_path, ignore_errors=True)
+        shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
+
+    add_desktop_entry(display_name, args.url, args.name, args.name, args.name)
     add_profile_to_ini(args.name, profile_path)
 
     if not args.skip_user_chrome:
         add_user_chrome(profile_path)
         set_userchrome_true(profile_path)
+
+    try:
+        add_desktop_entry_icon(args.name, args.url)
+    except:
+        # We dont care if the icon fails
+        # but don't break the program
+        logging.info("Failed to add icon")
 
 def main():
     parser = argparse.ArgumentParser(prog='ffssb')
