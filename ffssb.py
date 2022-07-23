@@ -2,7 +2,6 @@
 
 import argparse
 import configparser
-import logging
 import os
 import re
 import requests
@@ -28,6 +27,9 @@ def get_base_profile_path():
 
 def get_ffssb_prefix():
     return 'ffssb.'
+
+def get_desktop_entry_path(name):
+    return r'' + os_applications_dir + get_ffssb_prefix() + name + '.desktop'
 
 def add_profile_to_ini(name, profile_path):
     config_path = ffsettings_dir + 'profiles.ini'
@@ -63,6 +65,59 @@ def add_profile_to_ini(name, profile_path):
     os.remove(config_path)
     shutil.move(config_path_tmp, config_path)
 
+def remove_profile_from_ini(name):
+    config_path = ffsettings_dir + 'profiles.ini'
+    config_path_tmp = ffsettings_dir + 'profiles.ini.tmp'
+    config = configparser.ConfigParser()
+    config.optionxform = lambda optionstr : optionstr
+    config.read(config_path)
+
+    # remove profile
+    profile_to_remove = 0
+    profile_nums = []
+    for profile in config.sections():
+        if profile.startswith('Profile'):
+            profile_num = int(profile.replace('Profile', ''))
+            profile_nums.append(profile_num)
+
+            if config[profile]['Name'] == name:
+                profile_to_remove = profile_num
+    config.remove_section('Profile' + str(profile_to_remove))
+
+    # rename profiles to be incremental
+    profile_nums.sort()
+    for num in profile_nums:
+        next_profile = 'Profile' + str(num + 1)
+        next_next_profile = 'Profile' + str(num + 2)
+
+        if config.has_section(next_profile):
+            continue
+        if config.has_section(next_next_profile):
+            config[next_profile] = config[next_next_profile]
+            config.remove_section(next_next_profile)
+
+
+    # create new config ordered
+    new_config_dict = {}
+    new_profile_nums = [i for i in range(len(profile_nums)-1)]
+    new_profile_nums.sort(reverse=True)
+    for num in new_profile_nums:
+        profile = 'Profile' + str(num)
+        new_config_dict[profile] = config[profile]
+
+    for section in config.sections():
+        if not section.startswith('Profile'):
+            new_config_dict[section] = config[section]
+
+    new_config = configparser.ConfigParser()
+    new_config.optionxform = lambda optionstr : optionstr
+    new_config.read_dict(new_config_dict)
+
+    with open(config_path_tmp, 'w') as configfile:
+        new_config.write(configfile, space_around_delimiters=False)
+    os.remove(config_path)
+    shutil.move(config_path_tmp, config_path)
+
 def add_desktop_entry(display_name, url, profile_name, name, icon):
     desktop_entry_template = '''[Desktop Entry]
 Version=1.0
@@ -75,8 +130,7 @@ StartupNotify=true
 StartupWMClass={3}'''
 
     desktop_entry_content = desktop_entry_template.format(display_name, url, profile_name, name, icon);
-    filePath = r'' + os_applications_dir + get_ffssb_prefix() + name + '.desktop'
-    with open(filePath, 'w') as fp:
+    with open(get_desktop_entry_path(name), 'w') as fp:
         fp.write(desktop_entry_content)
 
 def add_desktop_entry_icon(name, url):
@@ -174,7 +228,7 @@ def create(args):
     except:
         # We dont care if the icon fails
         # but don't break the program
-        logging.info("Failed to add icon")
+        print("Could not add icon")
 
     add_desktop_entry(display_name, args.url, args.name, args.name, icon_path)
     add_profile_to_ini(args.name, ffssb_name)
@@ -201,7 +255,16 @@ def list(args):
         print ("{:<20} {:<20}".format(name, url))
 
 def remove(args):
-    return ''
+    ffssb_name = get_ffssb_prefix() + args.name
+    profile_path = ffsettings_dir + ffssb_name
+
+    if os.path.exists(get_desktop_entry_path(args.name)):
+        os.remove(get_desktop_entry_path(args.name))
+
+    if os.path.exists(profile_path):
+        shutil.rmtree(profile_path)
+
+    remove_profile_from_ini(args.name)
 
 def main():
     parser = argparse.ArgumentParser(prog='ffssb')
@@ -225,6 +288,12 @@ def main():
     parser_remove.set_defaults(func=remove)
 
     args = parser.parse_args()
+
+    if hasattr(args, 'name'):
+        if args.name == 'default' or args.name == 'default-release':
+            print("Name is reserved by firefox. Aborting...")
+            return
+
     args.func(args)
 
 if __name__ == '__main__':
