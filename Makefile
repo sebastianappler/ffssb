@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+
 .ONESHELL:
 .PHONY: build
 
