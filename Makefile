@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-
+.ONESHELL:
 .PHONY: build
 
 build:
@@ -10,5 +10,6 @@ build:
 	pyinstaller --onefile --clean --strip ffssb.py
 
 clean:
+	rm -rf .venv/
 	rm -rf build/
 	rm -f ffssb.spec
