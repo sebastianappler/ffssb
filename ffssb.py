@@ -140,7 +140,7 @@ def add_desktop_entry_icon(name, url):
     icon_path = ffssbcache_dir + '/' + name + '.ico'
     if not os.path.exists(icon_path):
         domain = str(urlparse(url).hostname)
-        ico_url = 'https://icons.duckduckgo.com/ip2/' + domain + '.ico'
+        ico_url = 'https://icons.duckduckgo.com/ip3/{0}.ico'.format(domain)
         ico_file = requests.get(ico_url)
         open(icon_path, 'wb').write(ico_file.content)
 
