@@ -152,41 +152,65 @@ def add_desktop_entry_icon(name, url):
 
 def add_user_chrome(profile_path):
     chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-#TabsToolbar .customization-target, /* tabs */
-#PersonalToolbar, /* bookmarks toolbar */
+/* hide clutter */
+#PersonalToolbar,
 #page-action-buttons
 {
     visibility: collapse;
 }
-#nav-bar {
-    margin-top: -10px;
-    margin-right: 75px;
-    max-height: 40px;
-}
-#nav-bar-customization-target {
-    margin-top: 5px;
+.urlbarView {
+    display: none !important;
 }
 #urlbar-background {
     visibility: hidden;
+}
+
+/* structure bars */
+#nav-bar {
+    margin-top: -10px;
+    margin-right: 75px;
+    margin-left: 32px;
+    max-height: 40px;
 }
 #urlbar-container {
     margin-right: 70vh;
     max-width: 35vh;
 }
-.urlbarView {
-    display: none !important;
+#titlebar {
+    margin-bottom: -30px;
+}
+
+/* adjust icon alignments */
+#TabsToolbar {
+    margin-top: -4px;
+    background: #444;
 }
 #PanelUI-button,
 #nav-bar-overflow-button {
-    margin-top: 5px !important;
+    margin-top: 4px !important;
 }
-#TabsToolbar {
-    background: #444;
+.titlebar-buttonbox-container {
+    margin-top: 4px;
 }
-#titlebar {
-    margin-bottom: -30px;
+#nav-bar-customization-target {
+    margin-top: 4px;
+}
+.tab-content {
+    margin-top: 4px;
+}
+
+/* favicon */
+#TabsToolbar-customization-target {
+    margin-left: -40px;
+}
+#tabbrowser-arrowscrollbox * {
+    max-width: 32px !important;
+    max-height: 32px !important;
+}
+.tab-background,
+.tab-close-button
+{
+    display: none;
 }
 '''
     chrome_dir = ffsettings_dir + profile_path + '/chrome'
