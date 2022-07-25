@@ -282,6 +282,9 @@ def list(args):
             url = re.findall(r'(https?://\S+)', file_text)[0]
             data.append([name, url])
 
+    if len(data) == 0:
+        return
+
     print ("{:<20} {:<20}".format('NAME','URL'))
     for v in data:
         name, url = v
