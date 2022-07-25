@@ -96,7 +96,6 @@ def remove_profile_from_ini(name):
             config[next_profile] = config[next_next_profile]
             config.remove_section(next_next_profile)
 
-
     # create new config ordered
     new_config_dict = {}
     new_profile_nums = [i for i in range(len(profile_nums)-1)]
@@ -145,8 +144,8 @@ def add_desktop_entry_icon(name, url):
         open(icon_path, 'wb').write(ico_file.content)
 
     img = Image.open(icon_path)
-    img_path = os_icons_dir + '/48x48/apps/' + name + '.png'
-    img.save(img_path, format = 'PNG', sizes=[(48,48)])
+    img_path = os_icons_dir + '/32x32/apps/' + name + '.png'
+    img.save(img_path, format = 'PNG', sizes=[(32,32)])
 
     return img_path
 
