@@ -232,10 +232,6 @@ def add_to_about_config(profile_path, configLine):
         with open(user_js_file, 'w') as fp:
             fp.write(configLine)
 
-def set_privatebrowsing_true(profile_path):
-    privatebrowsing_true = 'user_pref("browser.privatebrowsing.autostart", true);'
-    add_to_about_config(profile_path, privatebrowsing_true)
-
 def set_userchrome_true(profile_path):
     userchrome_true = 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
     add_to_about_config(profile_path, userchrome_true)
@@ -252,6 +248,9 @@ def create(args):
 
     if not os.path.exists(newprofile_path):
         shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
+        # remove previous sessions
+        shutil.rmtree(newprofile_path + '/sessionstore-backups')
+        os.remove(newprofile_path + '/sessionCheckpoints.json')
 
     try:
         icon_path = add_desktop_entry_icon(args.name, args.url)
@@ -262,9 +261,6 @@ def create(args):
 
     add_desktop_entry(display_name, args.url, args.name, args.name, icon_path)
     add_profile_to_ini(args.name, ffssb_name)
-
-    # Prevents copying previously opened tab history
-    set_privatebrowsing_true(ffssb_name)
 
     if not args.skip_user_chrome:
         add_user_chrome(ffssb_name)
