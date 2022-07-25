@@ -219,20 +219,26 @@ tab {
     with open(chrome_dir + '/userChrome.css', 'w') as fp:
         fp.write(chrome_css)
 
-def set_userchrome_true(profile_path):
-    userchrome_true = 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
-
+def add_to_about_config(profile_path, configLine):
     user_js_file = ffsettings_dir + profile_path + '/user.js'
     if os.path.exists(user_js_file):
         filedata = ""
         with open(user_js_file, 'r') as fp:
             filedata = fp.read()
-        if not filedata.find(userchrome_true):
+        if not filedata.find(configLine):
             with open(user_js_file, 'a') as fp:
-                fp.writelines(userchrome_true)
+                fp.writelines(configLine)
     else:
         with open(user_js_file, 'w') as fp:
-            fp.write(userchrome_true)
+            fp.write(configLine)
+
+def set_privatebrowsing_true(profile_path):
+    privatebrowsing_true = 'user_pref("browser.privatebrowsing.autostart", true);'
+    add_to_about_config(profile_path, privatebrowsing_true)
+
+def set_userchrome_true(profile_path):
+    userchrome_true = 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
+    add_to_about_config(profile_path, userchrome_true)
 
 def create(args):
     baseprofile_path = get_base_profile_path()
@@ -256,6 +262,9 @@ def create(args):
 
     add_desktop_entry(display_name, args.url, args.name, args.name, icon_path)
     add_profile_to_ini(args.name, ffssb_name)
+
+    # Prevents copying previously opened tab history
+    set_privatebrowsing_true(ffssb_name)
 
     if not args.skip_user_chrome:
         add_user_chrome(ffssb_name)
