@@ -164,13 +164,18 @@ def add_user_chrome(profile_path):
 #urlbar-background {
     visibility: hidden;
 }
+/* hide all tabs but first */
+#tabbrowser-arrowscrollbox tab:not(:first-child) {
+    display: none;
+}
 
 /* structure bars */
 #nav-bar {
-    margin-top: -10px;
+    margin-top: -6px;
     margin-right: 75px;
     margin-left: 32px;
-    max-height: 40px;
+    max-height: 36px;
+    box-shadow: none !important;
 }
 #urlbar-container {
     margin-right: 70vh;
@@ -182,21 +187,14 @@ def add_user_chrome(profile_path):
 
 /* adjust icon alignments */
 #TabsToolbar {
-    margin-top: -4px;
     background: #444;
+    border-radius: 10px 10px 0px 0px;
 }
-#PanelUI-button,
-#nav-bar-overflow-button {
-    margin-top: 4px !important;
+toolbarbutton {
+    margin-top: -5px !important;
 }
 .titlebar-buttonbox-container {
-    margin-top: 4px;
-}
-#nav-bar-customization-target {
-    margin-top: 4px;
-}
-.tab-content {
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 /* favicon */
