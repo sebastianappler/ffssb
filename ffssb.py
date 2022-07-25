@@ -184,12 +184,12 @@ def add_user_chrome(profile_path):
 #titlebar {
     margin-bottom: -30px;
 }
-
-/* adjust icon alignments */
 #TabsToolbar {
     background: #444;
     border-radius: 10px 10px 0px 0px;
 }
+
+/* adjust button alignments */
 toolbarbutton {
     margin-top: -5px !important;
 }
