@@ -210,6 +210,9 @@ toolbarbutton {
 {
     display: none;
 }
+tab {
+    padding-top: 2px !important;
+}
 '''
     chrome_dir = ffsettings_dir + profile_path + '/chrome'
     if not os.path.exists(chrome_dir):
