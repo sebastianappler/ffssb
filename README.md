@@ -50,13 +50,13 @@ ffssb <cmd> --help
 
 ## How does it work
 
-Ffssb takes advantage of firefox profiles and the --no-remote flag in firefox
-cli. When creating a new desktop application ffssb will copy the current profile
-into a new one. Then it creates a desktop entry that can be started with the
-profile as a separate instance. Because of this, it's safe to customize the ssb
-instance without affecting other firefox profiles.
+`ffssb` takes advantage of firefox profiles and the --no-remote flag in firefox
+cli. When creating a new ssb it copies the current profile into a new one. Then
+creates a desktop entry that can be started with the profile as a separate
+instance. Because of this, it's safe to customize the ssb instance without
+affecting other firefox profiles.
 
-Ffssb also takes advantage of the user chrome feature to make it look cleaner
+It also takes advantage of the user chrome feature to make it look cleaner
 and more suitable as a stand-alone application. This can be disabled with the
 --no-user-chrome flag.
 
