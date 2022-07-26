@@ -45,7 +45,7 @@ typing) and start it.
 To show more commands:
 ``` sh
 ffssb --help
-ffssv <cmd> --help
+ffssb <cmd> --help
 ```
 
 ## How does it work
