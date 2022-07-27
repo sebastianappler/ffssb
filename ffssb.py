@@ -18,7 +18,7 @@ def set_linux():
     linux_cfg = {
         'ffssbcache_dir': os.path.expanduser('~') + '/.cache/ffssb/',
         'os_applications_dir': os.path.expanduser('~') + '/.local/share/applications/',
-        'os_icons_dir': os.path.expanduser('~') + '/.local/share/icons/hicolor/',
+        'os_icons_dir': os.path.expanduser('~') + '/.local/share/icons/hicolor/scalable/apps/',
         'ffsettings_dir': os.path.expanduser('~') + '/.mozilla/firefox/'
     }
     cfg.update(linux_cfg)
@@ -258,7 +258,7 @@ def create(args):
     ffssb_name = cfg['ffssb_prefix'] + args.name
     newprofile_path = cfg['ffsettings_dir'] + ffssb_name
     display_name = args.name
-    icon_path = args.name
+    icon_path = cfg['os_icons_dir'] + os.path.sep + args.name
 
     if args.display_name != None:
         display_name = args.display_name
@@ -269,12 +269,15 @@ def create(args):
         shutil.rmtree(newprofile_path + os.path.sep + 'sessionstore-backups')
         os.remove(newprofile_path + os.path.sep + 'sessionCheckpoints.json')
 
-    try:
-        icon_path = add_desktop_entry_icon(args.name, args.url)
-    except:
-        # We dont care if the icon fails
-        # but don't break the program
-        print("Could not add icon")
+    if args.icon != None:
+        shutil.copy2(args.icon, icon_path)
+    else:
+        try:
+            icon_path = add_desktop_entry_icon(args.name, args.url)
+        except:
+            # We dont care if the icon fails
+            # but don't break the program
+            print("Could not add icon")
 
     add_desktop_entry(display_name, args.url, args.name, args.name, icon_path)
     add_profile_to_ini(args.name, ffssb_name)
@@ -326,6 +329,7 @@ def main():
     parser_create.add_argument('name', help='name of the application')
     parser_create.add_argument('url', help='url the application will use')
     parser_create.add_argument('--display-name', help='set display name of desktop entry')
+    parser_create.add_argument('--icon', help='path to custom icon')
     parser_create.add_argument('--skip-user-chrome', action='store_true', help='do not add userChrome.css to profile')
     parser_create.set_defaults(func=create)
 
