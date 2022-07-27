@@ -9,31 +9,45 @@ import shutil
 from urllib.parse import urlparse
 from PIL import Image
 
-ffssbcache_dir = os.path.expanduser('~') + '/.cache/ffssb'
-os_applications_dir = os.path.expanduser('~') + '/.local/share/applications/'
-os_icons_dir = os.path.expanduser('~') + '/.local/share/icons/hicolor'
-ffsettings_dir = os.path.expanduser('~') + '/.mozilla/firefox/'
-ffbaseprofile = 'Profile0'
+cfg = {
+    'ffbaseprofile': 'Profile0',
+    'ffssb_prefix': 'ffssb.'
+}
+
+def set_linux():
+    linux_cfg = {
+        'ffssbcache_dir': os.path.expanduser('~') + '/.cache/ffssb/',
+        'os_applications_dir': os.path.expanduser('~') + '/.local/share/applications/',
+        'os_icons_dir': os.path.expanduser('~') + '/.local/share/icons/hicolor/',
+        'ffsettings_dir': os.path.expanduser('~') + '/.mozilla/firefox/'
+    }
+    cfg.update(linux_cfg)
+
+def set_windows():
+    windows_cfg = {
+        'ffssbcache_dir': os.path.expanduser('~') + '\\AppData\\Local\\ffssb\\cache\\',
+        'os_applications_dir': os.path.expanduser('~') + '\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs',
+        'os_icons_dir': os.path.expanduser('~') + '\\AppData\\Local\\ffssb\\icons\\',
+        'ffsettings_dir': os.path.expanduser('~') + '\\AppData\\Roaming\\Mozilla\\Firefox'
+    }
+    cfg.update(windows_cfg)
 
 def get_base_profile_path():
     config = configparser.ConfigParser()
     config.optionxform = lambda optionstr : optionstr
-    config.read(ffsettings_dir + 'profiles.ini')
+    config.read(cfg['ffsettings_dir'] + 'profiles.ini')
 
     for profile in config.sections():
-        if profile == ffbaseprofile:
-            return ffsettings_dir + config[profile]['Path']
+        if profile == cfg['ffbaseprofile']:
+            return cfg['ffsettings_dir'] + config[profile]['Path']
     return ''
 
-def get_ffssb_prefix():
-    return 'ffssb.'
-
 def get_desktop_entry_path(name):
-    return r'' + os_applications_dir + get_ffssb_prefix() + name + '.desktop'
+    return r'' + cfg['os_applications_dir'] + cfg['ffssb_prefix'] + name + '.desktop'
 
 def add_profile_to_ini(name, profile_path):
-    config_path = ffsettings_dir + 'profiles.ini'
-    config_path_tmp = ffsettings_dir + 'profiles.ini.tmp'
+    config_path = cfg['ffsettings_dir'] + 'profiles.ini'
+    config_path_tmp = cfg['ffsettings_dir'] + 'profiles.ini.tmp'
 
     config = configparser.ConfigParser()
     config.optionxform = lambda optionstr : optionstr
@@ -66,8 +80,8 @@ def add_profile_to_ini(name, profile_path):
     shutil.move(config_path_tmp, config_path)
 
 def remove_profile_from_ini(name):
-    config_path = ffsettings_dir + 'profiles.ini'
-    config_path_tmp = ffsettings_dir + 'profiles.ini.tmp'
+    config_path = cfg['ffsettings_dir'] + 'profiles.ini'
+    config_path_tmp = cfg['ffsettings_dir'] + 'profiles.ini.tmp'
     config = configparser.ConfigParser()
     config.optionxform = lambda optionstr : optionstr
     config.read(config_path)
@@ -117,7 +131,10 @@ def remove_profile_from_ini(name):
     os.remove(config_path)
     shutil.move(config_path_tmp, config_path)
 
-def add_desktop_entry(display_name, url, profile_name, name, icon):
+def add_win_shortcut(url, profile):
+    ff_exec = '\"C:\\Program Files\\Mozilla Firefox\\firefox.exe\" --new-window {0} --no-remote -P {1}'.format(url, profile)
+    ps_cmd = '$s=(New-Object -COM WScript.Shell).CreateShortcut(\'{0}\');$s.TargetPath=\'{1}\';$s.Save()'.format(cfg['os_applications_dir'] + 'test-shortcut.lnk', ff_exec)
+def add_desktop_entry(display_name, url, profile, name, icon):
     desktop_entry_template = '''[Desktop Entry]
 Version=1.0
 Terminal=false
@@ -128,15 +145,15 @@ Icon={4}
 StartupNotify=true
 StartupWMClass={3}'''
 
-    desktop_entry_content = desktop_entry_template.format(display_name, url, profile_name, name, icon);
+    desktop_entry_content = desktop_entry_template.format(display_name, url, profile, name, icon);
     with open(get_desktop_entry_path(name), 'w') as fp:
         fp.write(desktop_entry_content)
 
 def add_desktop_entry_icon(name, url):
-    if not os.path.exists(ffssbcache_dir):
-        os.mkdir(ffssbcache_dir)
+    if not os.path.exists(cfg['ffssbcache_dir']):
+        os.mkdir(cfg['ffssbcache_dir'])
 
-    icon_path = ffssbcache_dir + '/' + name + '.ico'
+    icon_path = cfg['ffssbcache_dir'] + name + '.ico'
     if not os.path.exists(icon_path):
         domain = str(urlparse(url).hostname)
         ico_url = 'https://icons.duckduckgo.com/ip3/{0}.ico'.format(domain)
@@ -144,7 +161,7 @@ def add_desktop_entry_icon(name, url):
         open(icon_path, 'wb').write(ico_file.content)
 
     img = Image.open(icon_path)
-    img_path = os_icons_dir + '/32x32/apps/' + name + '.png'
+    img_path = cfg['os_icons_dir'] + '32x32' + os.path.sep + 'apps' + os.path.sep + name + '.png'
     img.save(img_path, format = 'PNG', sizes=[(32,32)])
 
     return img_path
@@ -213,14 +230,14 @@ tab {
     padding-top: 2px !important;
 }
 '''
-    chrome_dir = ffsettings_dir + profile_path + '/chrome'
+    chrome_dir = cfg['ffsettings_dir'] + profile_path + os.path.sep + 'chrome'
     if not os.path.exists(chrome_dir):
         os.mkdir(chrome_dir)
-    with open(chrome_dir + '/userChrome.css', 'w') as fp:
+    with open(chrome_dir + os.path.sep +'userChrome.css', 'w') as fp:
         fp.write(chrome_css)
 
 def add_to_about_config(profile_path, configLine):
-    user_js_file = ffsettings_dir + profile_path + '/user.js'
+    user_js_file = cfg['ffsettings_dir'] + profile_path + os.path.sep + 'user.js'
     if os.path.exists(user_js_file):
         filedata = ""
         with open(user_js_file, 'r') as fp:
@@ -238,8 +255,8 @@ def set_userchrome_true(profile_path):
 
 def create(args):
     baseprofile_path = get_base_profile_path()
-    ffssb_name = get_ffssb_prefix() + args.name
-    newprofile_path = ffsettings_dir + ffssb_name
+    ffssb_name = cfg['ffssb_prefix'] + args.name
+    newprofile_path = cfg['ffsettings_dir'] + ffssb_name
     display_name = args.name
     icon_path = args.name
 
@@ -249,8 +266,8 @@ def create(args):
     if not os.path.exists(newprofile_path):
         shutil.copytree(baseprofile_path, newprofile_path, symlinks=True, dirs_exist_ok=True)
         # remove previous sessions
-        shutil.rmtree(newprofile_path + '/sessionstore-backups')
-        os.remove(newprofile_path + '/sessionCheckpoints.json')
+        shutil.rmtree(newprofile_path + os.path.sep + 'sessionstore-backups')
+        os.remove(newprofile_path + os.path.sep + 'sessionCheckpoints.json')
 
     try:
         icon_path = add_desktop_entry_icon(args.name, args.url)
@@ -267,12 +284,12 @@ def create(args):
         set_userchrome_true(ffssb_name)
 
 def list(args):
-    applications = os.listdir(os_applications_dir)
-    ffssb_application_files = [a for a in applications if get_ffssb_prefix() in a]
+    applications = os.listdir(cfg['os_applications_dir'])
+    ffssb_application_files = [a for a in applications if cfg['ffssb_prefix'] in a]
 
     data = []
     for file in ffssb_application_files:
-        with open(os_applications_dir + file, 'r') as fp:
+        with open(cfg['os_applications_dir'] + file, 'r') as fp:
             file_text = fp.read()
             name = re.findall(r'^ffssb\.(.+)\.desktop$' ,file)[0]
             url = re.findall(r'(https?://\S+)', file_text)[0]
@@ -287,8 +304,8 @@ def list(args):
         print ("{:<20} {:<20}".format(name, url))
 
 def remove(args):
-    ffssb_name = get_ffssb_prefix() + args.name
-    profile_path = ffsettings_dir + ffssb_name
+    ffssb_name = cfg['ffssb_prefix'] + args.name
+    profile_path = cfg['ffsettings_dir'] + ffssb_name
 
     if os.path.exists(get_desktop_entry_path(args.name)):
         os.remove(get_desktop_entry_path(args.name))
@@ -299,6 +316,8 @@ def remove(args):
     remove_profile_from_ini(args.name)
 
 def main():
+    set_linux()
+
     parser = argparse.ArgumentParser(prog='ffssb')
     subparsers = parser.add_subparsers()
 
