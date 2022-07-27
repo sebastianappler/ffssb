@@ -218,6 +218,7 @@ toolbarbutton {
     margin-left: -40px;
 }
 #tabbrowser-arrowscrollbox * {
+    min-width: 0px !important;
     max-width: 32px !important;
     max-height: 32px !important;
 }
