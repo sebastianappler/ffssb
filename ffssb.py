@@ -307,6 +307,16 @@ def list(args):
         name, url = v
         print ("{:<20} {:<20}".format(name, url))
 
+def launch(args):
+    desktop_path = get_desktop_entry_path(args.name)
+    if os.path.exists(desktop_path):
+        with open(desktop_path, 'r') as fp:
+            file_text = fp.read()
+            exec_cmd = re.findall(r'^(?:Exec=)(.+)$', file_text, re.MULTILINE)[0]
+            if len(exec_cmd) == 0:
+                return
+            os.system(exec_cmd)
+
 def remove(args):
     ffssb_name = cfg['ffssb_prefix'] + args.name
     profile_path = cfg['ffsettings_dir'] + ffssb_name
@@ -337,6 +347,11 @@ def main():
     # list
     parser_list = subparsers.add_parser('list', help = 'list all site specific browsers created by this tool.')
     parser_list.set_defaults(func=list)
+
+    # launch
+    parser_launch = subparsers.add_parser('launch', help = 'launch site specific browser application.')
+    parser_launch.add_argument('name', help='name of the application')
+    parser_launch.set_defaults(func=launch)
 
     # remove
     parser_remove = subparsers.add_parser('remove', help = 'remove site specific browser application.')

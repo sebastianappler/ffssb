@@ -40,7 +40,11 @@ ffssb create hn https://news.ycombinator.com/ --display-name "Hacker News"
 ```
 
 Then search for "Hacker News" in your applications (press Super-key, start
-typing) and start it.
+typing) and start it. Alternatively, launch the ssb from the command line
+by typing:
+``` sh
+ffssb launch hn
+```
 
 To show more commands:
 ``` sh
