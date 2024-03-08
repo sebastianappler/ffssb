@@ -23,7 +23,7 @@ The easiest way to get started:
 ``` sh
 git clone https://github.com/sebastianappler/ffssb
 make
-mv ./dist/ffssb /usr/local/bin
+make install
 ```
 
 It's also possible to run the python script directly:
