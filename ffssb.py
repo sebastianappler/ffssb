@@ -160,11 +160,19 @@ def add_desktop_entry_icon(name, url):
         ico_file = requests.get(ico_url)
         open(icon_path, 'wb').write(ico_file.content)
 
-    img = Image.open(icon_path)
-    img_path = cfg['os_icons_dir'] + '32x32' + os.path.sep + 'apps' + os.path.sep + name + '.png'
-    img.save(img_path, format = 'PNG', sizes=[(32,32)])
+    icon_sizes = ['16', '32']
+    img_paths = {}
+    for size in icon_sizes:
+        app_icons_path = cfg['os_icons_dir'] + '{0}x{0}'.format(size) + os.path.sep + 'apps'
+        if not os.path.exists(app_icons_path):
+            os.makedirs(app_icons_path)
 
-    return img_path
+        img_paths[size] = app_icons_path + os.path.sep + name + '.png'
+        if not os.path.exists(img_paths[size]):
+            img = Image.open(icon_path)
+            img.save(img_paths[size], format = 'PNG', sizes=[(size, size)])
+
+    return img_paths['32']
 
 def add_user_chrome(profile_path):
     chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
