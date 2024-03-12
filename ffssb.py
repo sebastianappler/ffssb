@@ -160,11 +160,19 @@ def add_desktop_entry_icon(name, url):
         ico_file = requests.get(ico_url)
         open(icon_path, 'wb').write(ico_file.content)
 
-    img = Image.open(icon_path)
-    img_path = cfg['os_icons_dir'] + '32x32' + os.path.sep + 'apps' + os.path.sep + name + '.png'
-    img.save(img_path, format = 'PNG', sizes=[(32,32)])
+    icon_sizes = ['16', '32']
+    img_paths = {}
+    for size in icon_sizes:
+        app_icons_path = cfg['os_icons_dir'] + '{0}x{0}'.format(size) + os.path.sep + 'apps'
+        if not os.path.exists(app_icons_path):
+            os.makedirs(app_icons_path)
 
-    return img_path
+        img_paths[size] = app_icons_path + os.path.sep + name + '.png'
+        if not os.path.exists(img_paths[size]):
+            img = Image.open(icon_path)
+            img.save(img_paths[size], format = 'PNG', sizes=[(size, size)])
+
+    return img_paths['32']
 
 def add_user_chrome(profile_path):
     chrome_css = '''@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -307,6 +315,16 @@ def list(args):
         name, url = v
         print ("{:<20} {:<20}".format(name, url))
 
+def launch(args):
+    desktop_path = get_desktop_entry_path(args.name)
+    if os.path.exists(desktop_path):
+        with open(desktop_path, 'r') as fp:
+            file_text = fp.read()
+            exec_cmd = re.findall(r'^(?:Exec=)(.+)$', file_text, re.MULTILINE)[0]
+            if len(exec_cmd) == 0:
+                return
+            os.system(exec_cmd)
+
 def remove(args):
     ffssb_name = cfg['ffssb_prefix'] + args.name
     profile_path = cfg['ffsettings_dir'] + ffssb_name
@@ -337,6 +355,11 @@ def main():
     # list
     parser_list = subparsers.add_parser('list', help = 'list all site specific browsers created by this tool.')
     parser_list.set_defaults(func=list)
+
+    # launch
+    parser_launch = subparsers.add_parser('launch', help = 'launch site specific browser application.')
+    parser_launch.add_argument('name', help='name of the application')
+    parser_launch.set_defaults(func=launch)
 
     # remove
     parser_remove = subparsers.add_parser('remove', help = 'remove site specific browser application.')
