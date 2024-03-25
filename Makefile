@@ -1,4 +1,4 @@
-SHELL := /usr/bin/env bash
+SHELL ?= /bin/sh
 PYTHON_BIN ?= python
 
 .ONESHELL:
