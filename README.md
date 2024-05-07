@@ -19,14 +19,32 @@ Supports linux, tested on fedora with gnome.
 
 ### Install
 
-The easiest way to get started:
+The easiest way to get started, if your environment uses GNU make and bash/zsh:
 ``` sh
 git clone https://github.com/sebastianappler/ffssb
-make
-make install
+make && make install
 ```
 
-It's also possible to run the python script directly:
+If you're using a shell other than bash/zsh:
+``` sh
+git clone https://github.com/sebastianappler/ffssb
+bash -c 'make && make install'
+```
+
+You can also specify an alternate Python binary:
+``` sh
+git clone https://github.com/sebastianappler/ffssb
+PYTHON_BIN="$(which python3)" make && make install
+```
+
+You can combine the above, as well. For example, on [OpenBSD](https://www.openbsd.org/), one would install as follows:
+``` sh
+pkg_add git python3 gmake
+git clone https://github.com/sebastianappler/ffssb
+PYTHON_BIN="$(which python3)" bash -c 'gmake && gmake install'
+```
+
+Finally, it's also possible to run the python script directly:
 ``` sh
 pip install -r requirements.txt
 python ffssb.py <cmd>
