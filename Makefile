@@ -1,7 +1,6 @@
 SHELL ?= /bin/sh
 PYTHON_BIN ?= python
 
-.ONESHELL:
 .PHONY: build
 
 build:
