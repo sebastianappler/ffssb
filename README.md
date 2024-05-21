@@ -22,11 +22,16 @@ Supports linux, tested on fedora with gnome.
 The easiest way to get started:
 ``` sh
 git clone https://github.com/sebastianappler/ffssb
-make
-make install
+make && make install
 ```
 
-It's also possible to run the python script directly:
+You can also specify an alternate Python binary:
+``` sh
+git clone https://github.com/sebastianappler/ffssb
+PYTHON_BIN="$(which python3)" make && make install
+```
+
+Finally, it's also possible to run the python script directly:
 ``` sh
 pip install -r requirements.txt
 python ffssb.py <cmd>

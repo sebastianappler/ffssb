@@ -1,26 +1,19 @@
 SHELL ?= /bin/sh
 PYTHON_BIN ?= python
 
-.ONESHELL:
 .PHONY: build
 
 build:
-	$(PYTHON_BIN) -m pip install -r requirements.txt
-	$(PYTHON_BIN) -m pip install pyinstaller
-	pyinstaller --onefile --clean --strip ffssb.py
-
-build-venv:
 	$(PYTHON_BIN) -m venv .venv
-	source .venv/bin/activate
-	make build
+	. .venv/bin/activate && pip install -r requirements.txt
+	. .venv/bin/activate && pip install pyinstaller
+	. .venv/bin/activate && pyinstaller --onefile --clean --strip ffssb.py
 
 clean:
+	rm -rf .venv/
 	rm -rf build/
 	rm -rf dist/
 	rm -f ffssb.spec
-
-clean-venv: clean
-	rm -rf .venv/
 
 install:
 	install -m 755 dist/ffssb /usr/local/bin
